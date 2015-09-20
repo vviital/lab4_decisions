@@ -1,7 +1,5 @@
 package model;
 
-import javafx.util.Pair;
-
 import java.util.*;
 
 /**
@@ -13,9 +11,11 @@ public class Flow {
 
     private List<Integer>[] indexes;
 
-    private int[] dist;
+    private long[] dist;
 
-    private int[] phi;
+    private int[] pred;
+
+    private long[] phi;
 
     private int n;
 
@@ -46,18 +46,70 @@ public class Flow {
         for(Edge x : e){
             addEdge(x.getFrom(), x.getTo(), x.getCap(), x.getCost());
         }
-        this.phi = new int[n];
-        this.dist = new int[n];
+        this.phi = new long[n];
+        this.dist = new long[n];
+        this.pred = new int[n];
         this.from = from;
         this.sink = sink;
     }
 
-    private Pair<Long, Long> minCost(int from, int sink){
-        Pair<Long, Long> answer = new Pair(0, 0);
+    Pair dij(int from, int to){
+        PriorityQueue<Pair> q = new PriorityQueue<Pair>(1, (a, b) -> {
+            if (a.first != b.first){
+                return Long.compare(a.second, b.second);
+            }
+            return -Long.compare(a.first, b.first);
+        });
+        for(int i = 0; i < this.dist.length; ++i) dist[i] = Long.MAX_VALUE;
+        for(int i = 0; i < this.pred.length; ++i) pred[i] = -1;
+        dist[from] = 0;
+        q.add(new Pair(0, from));
+        while(q.size() != 0){
+            long d = q.element().first;
+            int v = (int)q.element().second;
+            q.remove();
+            if (dist[v] != d) continue;
+            for(int x : indexes[v]){
+                Edge e = this.edges.get(x);
+                int tov = e.getTo();
+                long w = e.getCost() + phi[v] - phi[tov];
+                if (dist[tov] > dist[v] + w && e.getCap() > e.getFlow()){
+                    dist[tov] = dist[v] + w;
+                    pred[tov] = x;
+                    q.add(new Pair(dist[tov], tov));
+                }
+            }
+        }
+        if (dist[to] == Long.MAX_VALUE) return new Pair(0, 0);
+        int cur = to;
+        Pair ans = new Pair(1, 0);
+        while(cur != from){
+            int x = pred[cur];
+            Edge e = edges.get(x);
+            ans.second += e.getCost();
+            this.edges.get(x).addFlow(1);
+            this.edges.get(x ^ 1).addFlow(-1);
+            cur = e.getFrom();
+        }
+        for(int i = 0; i < this.phi.length; ++i)
+            if (dist[i] != Long.MAX_VALUE)
+                phi[i] += dist[i];
+        return ans;
+
+    }
+
+    private Pair minCost(int from, int sink){
+        Pair answer = new Pair(0, 0);
+        for(int i = 0; i < this.phi.length; ++i) phi[i] = 0;
+        while(true){
+            Pair curans = dij(from, sink);
+            if (curans.first == 0) break;
+            answer = answer.add(curans);
+        }
         return answer;
     }
 
-    public Pair<Long, Long> getFlow(){
+    public Pair getFlow(){
         return minCost(from, sink);
     }
 

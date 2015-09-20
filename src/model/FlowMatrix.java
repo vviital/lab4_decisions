@@ -9,7 +9,7 @@ public class FlowMatrix {
 
     private long[][] cost;
 
-    private int[] dist;
+    private long[] dist;
 
     public long getFlow() {
         return flow;
@@ -27,7 +27,7 @@ public class FlowMatrix {
 
     public FlowMatrix(int n){
         this.arr = new long[n][n];
-        this.dist = new int[n];
+        this.dist = new long[n];
         this.cost = new long[n][n];
     }
 
@@ -39,11 +39,11 @@ public class FlowMatrix {
         this.arr[i][j] += value;
     }
 
-    public int getDist(int index){
+    public long getDist(int index){
         return this.dist[index];
     }
 
-    public void setDist(int index, int value){
+    public void setDist(int index, long value){
         this.dist[index] = value;
     }
 
