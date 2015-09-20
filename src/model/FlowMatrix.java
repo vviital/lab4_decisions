@@ -11,12 +11,15 @@ public class FlowMatrix {
 
     private long[] dist;
 
+    private long currentCost;
+
     public long getFlow() {
         return flow;
     }
 
-    public void setFlow(long flow) {
-        this.flow = flow;
+    public void setFlow(Pair obj) {
+        this.flow = obj.first;
+        this.currentCost = obj.second;
     }
 
     private long flow;
@@ -57,5 +60,9 @@ public class FlowMatrix {
 
     public void setCost(int i, int j, long value){
         this.cost[i][j] = value;
+    }
+
+    public long getCost(){
+        return this.currentCost;
     }
 }

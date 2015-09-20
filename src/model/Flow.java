@@ -35,7 +35,6 @@ public class Flow {
         this.edges.add(new Edge(from, to, cap, cost));
         this.indexes[to].add(this.edges.size());
         this.edges.add(new Edge(to, from, 0, -cost));
-        this.memory = new ArrayList();
     }
 
     public Flow(List<Edge> e, int n, int from, int sink){
@@ -51,6 +50,7 @@ public class Flow {
         this.pred = new int[n];
         this.from = from;
         this.sink = sink;
+        this.memory = new ArrayList();
     }
 
     Pair dij(int from, int to){
@@ -100,11 +100,13 @@ public class Flow {
 
     private Pair minCost(int from, int sink){
         Pair answer = new Pair(0, 0);
+        this.persist(answer);
         for(int i = 0; i < this.phi.length; ++i) phi[i] = 0;
         while(true){
             Pair curans = dij(from, sink);
             if (curans.first == 0) break;
             answer = answer.add(curans);
+            this.persist(answer);
         }
         return answer;
     }
@@ -113,7 +115,7 @@ public class Flow {
         return minCost(from, sink);
     }
 
-    private void persist(long fl){
+    private void persist(Pair obj){
         FlowMatrix matrix = new FlowMatrix(this.n);
         for(Edge x : this.edges){
             int f = x.getFrom();
@@ -126,8 +128,34 @@ public class Flow {
         for(int i = 0; i < this.dist.length; ++i){
             matrix.setDist(i, dist[i]);
         }
-        matrix.setFlow(fl);
+        matrix.setFlow(obj);
         memory.add(matrix);
+    }
+
+    int dfs(int cur, int sink, int pred){
+        if (cur == sink) return pred;
+        int ans = -1;
+        for(int x : indexes[cur]){
+            Edge e = this.edges.get(x);
+            int to = e.getTo();
+            if (e.getFlow() > 0){
+                e.addFlow(1);
+                ans = dfs(to, sink, cur);
+                break;
+            }
+        }
+        return ans;
+    }
+
+    public List<Pair> recoverAnwer(){
+        List<Pair> answer = new ArrayList();
+        int N = (n - 2) / 2;
+        for(int i = 0; i < N; ++i){
+            int last = dfs(i + 1, sink, -1);
+            last -= N;
+            answer.add(new Pair(i + 1, last));
+        }
+        return answer;
     }
 
     public FlowMatrix getStep(int i){
